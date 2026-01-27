@@ -22,6 +22,7 @@ interface Stats {
       ETH: number
     }
     totalUSDT: number
+    exercisedTotalUSDT?: number
   }
   // USDT 本位
   initialTotalUSDT: number
@@ -227,22 +228,36 @@ export default function Home() {
             {/* 锁定资产 */}
             {stats?.netWorth.locked && (stats.netWorth.locked.USDT > 0 || stats.netWorth.locked.BTC > 0 || stats.netWorth.locked.ETH > 0) && (
               <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                <div className="data-label mb-3 text-[var(--warning)]">🔒 双币理财锁定中</div>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {stats.netWorth.locked.USDT > 0 && (
-                    <span className="text-[var(--warning)] font-mono">
-                      {formatNumber(stats.netWorth.locked.USDT)} USDT
-                    </span>
-                  )}
-                  {stats.netWorth.locked.BTC > 0 && (
-                    <span className="text-[var(--warning)] font-mono">
-                      {formatNumber(stats.netWorth.locked.BTC, 6)} BTC
-                    </span>
-                  )}
-                  {stats.netWorth.locked.ETH > 0 && (
-                    <span className="text-[var(--warning)] font-mono">
-                      {formatNumber(stats.netWorth.locked.ETH, 6)} ETH
-                    </span>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  {/* 左侧：锁定资产 */}
+                  <div>
+                    <div className="data-label mb-3 text-[var(--warning)]">🔒 双币理财锁定中</div>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      {stats.netWorth.locked.USDT > 0 && (
+                        <span className="text-[var(--warning)] font-mono">
+                          {formatNumber(stats.netWorth.locked.USDT)} USDT
+                        </span>
+                      )}
+                      {stats.netWorth.locked.BTC > 0 && (
+                        <span className="text-[var(--warning)] font-mono">
+                          {formatNumber(stats.netWorth.locked.BTC, 6)} BTC
+                        </span>
+                      )}
+                      {stats.netWorth.locked.ETH > 0 && (
+                        <span className="text-[var(--warning)] font-mono">
+                          {formatNumber(stats.netWorth.locked.ETH, 6)} ETH
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* 右侧：全部行权后价值 */}
+                  {stats.netWorth.exercisedTotalUSDT !== undefined && (
+                    <div className="text-right">
+                      <div className="data-label mb-2 text-[var(--danger)]">📉 全部行权后价值</div>
+                      <div className="font-mono font-semibold text-[var(--danger)]">
+                        ${formatNumber(stats.netWorth.exercisedTotalUSDT)}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

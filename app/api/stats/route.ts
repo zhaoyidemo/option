@@ -47,6 +47,28 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
     ETH: holdings.ETH + locked.ETH,
   }
 
+  // 计算全部行权后的资产
+  const exercisedHoldings = {
+    USDT: holdings.USDT,
+    BTC: holdings.BTC,
+    ETH: holdings.ETH,
+  }
+
+  // 对每笔 pending 交易，计算行权后的资产
+  trades.forEach((trade) => {
+    if (trade.status === 'pending') {
+      // 行权后得到 exerciseAmount 的 exerciseCurrency
+      exercisedHoldings[trade.exerciseCurrency] =
+        (exercisedHoldings[trade.exerciseCurrency] || 0) + trade.exerciseAmount
+    }
+  })
+
+  // 全部行权后的 USDT 价值
+  const exercisedTotalUSDT =
+    exercisedHoldings.USDT +
+    exercisedHoldings.BTC * prices.BTC +
+    exercisedHoldings.ETH * prices.ETH
+
   // 折算成 USDT
   const netWorth = {
     USDT: holdings.USDT,
@@ -58,6 +80,7 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
       totalHoldings.USDT +
       totalHoldings.BTC * prices.BTC +
       totalHoldings.ETH * prices.ETH,
+    exercisedTotalUSDT,  // 全部行权后的价值
   }
 
   return { holdings, netWorth, prices }
