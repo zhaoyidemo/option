@@ -1,0 +1,65 @@
+// Prisma Schema for Option Dashboard
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 资产表 - 记录初始资产
+model Asset {
+  id             String   @id @default(cuid())
+  currency       String   // 'USDT' | 'BTC' | 'ETH'
+  initialAmount  Float    // 初始数量
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("assets")
+}
+
+// 交易表 - 双币理财交易记录
+model Trade {
+  id              String    @id @default(cuid())
+
+  // 基本信息
+  platform        String    // 'binance' | 'okx'
+  coin            String    // 'BTC' | 'ETH'
+  direction       String    // 'buy_low' | 'sell_high'
+
+  // 投入信息
+  inputAmount     Float     // 投入数量
+  inputCurrency   String    // 投入币种 'USDT' | 'BTC' | 'ETH'
+
+  // 期权信息
+  strikePrice     Float     // 行权价
+  expiryTime      DateTime  // 到期时间（精确到分钟）
+  apr             Float     // 年化收益率（%）
+
+  // 预期结果（手动填入）
+  premium         Float     // 未行权时的收益
+  exerciseAmount  Float     // 行权时得到的数量
+  exerciseCurrency String   // 行权时得到的币种
+
+  // 结算信息（系统自动填入）
+  status          String    @default("pending") // 'pending' | 'settled'
+  exercised       Boolean?  // 是否行权（结算后填入）
+  settlementPrice Float?    // 结算价格
+  outputAmount    Float?    // 实际得到的数量
+  outputCurrency  String?   // 实际得到的币种
+
+  // 复投链条
+  parentId        String?   // 关联的上一笔交易
+  parent          Trade?    @relation("TradeChain", fields: [parentId], references: [id])
+  children        Trade[]   @relation("TradeChain")
+
+  // 时间戳
+  createdAt       DateTime  @default(now())
+  settledAt       DateTime? // 结算时间
+
+  @@map("trades")
+  @@index([status, expiryTime]) // 加速查询待结算交易
+  @@index([parentId]) // 加速查询复投链条
+}
