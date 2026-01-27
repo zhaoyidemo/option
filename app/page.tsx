@@ -11,6 +11,16 @@ interface Stats {
     USDT: number
     BTC: number
     ETH: number
+    locked?: {
+      USDT: number
+      BTC: number
+      ETH: number
+    }
+    total?: {
+      USDT: number
+      BTC: number
+      ETH: number
+    }
     totalUSDT: number
   }
   initialTotalUSDT: number

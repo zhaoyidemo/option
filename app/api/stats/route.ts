@@ -9,7 +9,20 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   const trades = await prisma.trade.findMany()
 
   // 从初始资产开始
-  const holdings: Record<string, number> = {}
+  const holdings: Record<string, number> = {
+    USDT: 0,
+    BTC: 0,
+    ETH: 0,
+  }
+
+  // 锁定资产（pending 交易）
+  const locked: Record<string, number> = {
+    USDT: 0,
+    BTC: 0,
+    ETH: 0,
+  }
+
+  // 初始资产
   assets.forEach((asset) => {
     holdings[asset.currency] = asset.initialAmount
   })
@@ -17,26 +30,34 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   // 根据交易记录计算当前持仓
   trades.forEach((trade) => {
     if (trade.status === 'settled' && trade.outputAmount && trade.outputCurrency) {
-      // 减去投入
+      // 已结算：减去投入，加上产出
       holdings[trade.inputCurrency] = (holdings[trade.inputCurrency] || 0) - trade.inputAmount
-
-      // 加上产出
       holdings[trade.outputCurrency] = (holdings[trade.outputCurrency] || 0) + trade.outputAmount
     } else if (trade.status === 'pending') {
-      // 待结算的交易，暂时减去投入（资金已锁定）
+      // 待结算：从可用资产移到锁定资产
       holdings[trade.inputCurrency] = (holdings[trade.inputCurrency] || 0) - trade.inputAmount
+      locked[trade.inputCurrency] = (locked[trade.inputCurrency] || 0) + trade.inputAmount
     }
   })
 
+  // 总持仓 = 可用 + 锁定
+  const totalHoldings = {
+    USDT: holdings.USDT + locked.USDT,
+    BTC: holdings.BTC + locked.BTC,
+    ETH: holdings.ETH + locked.ETH,
+  }
+
   // 折算成 USDT
   const netWorth = {
-    USDT: holdings.USDT || 0,
-    BTC: holdings.BTC || 0,
-    ETH: holdings.ETH || 0,
+    USDT: holdings.USDT,
+    BTC: holdings.BTC,
+    ETH: holdings.ETH,
+    locked,  // 锁定资产
+    total: totalHoldings,  // 总持仓
     totalUSDT:
-      (holdings.USDT || 0) +
-      (holdings.BTC || 0) * prices.BTC +
-      (holdings.ETH || 0) * prices.ETH,
+      totalHoldings.USDT +
+      totalHoldings.BTC * prices.BTC +
+      totalHoldings.ETH * prices.ETH,
   }
 
   return { holdings, netWorth, prices }
