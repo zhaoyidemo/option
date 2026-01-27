@@ -48,7 +48,7 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   }
 
   // 计算全部行权后的资产
-  const exercisedHoldings = {
+  const exercisedHoldings: Record<string, number> = {
     USDT: holdings.USDT,
     BTC: holdings.BTC,
     ETH: holdings.ETH,
