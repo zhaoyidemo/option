@@ -22,10 +22,20 @@ export async function GET() {
   }
 }
 
+// 将北京时间字符串转换为 Date 对象
+function parseBeijingTime(timeStr: string): Date {
+  // datetime-local 格式: "2024-01-15T16:00"
+  // 添加北京时区 +08:00 后解析
+  return new Date(timeStr + '+08:00')
+}
+
 // POST - 创建新交易
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+
+    // 将用户输入的北京时间正确转换
+    const expiryTime = parseBeijingTime(body.expiryTime)
 
     const trade = await prisma.trade.create({
       data: {
@@ -35,7 +45,7 @@ export async function POST(request: NextRequest) {
         inputAmount: parseFloat(body.inputAmount),
         inputCurrency: body.inputCurrency,
         strikePrice: parseFloat(body.strikePrice),
-        expiryTime: new Date(body.expiryTime),
+        expiryTime: expiryTime,
         apr: parseFloat(body.apr),
         premium: parseFloat(body.premium),
         exerciseAmount: parseFloat(body.exerciseAmount),
