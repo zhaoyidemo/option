@@ -86,6 +86,13 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   return { holdings, netWorth, prices }
 }
 
+// 初始本金固定价格（2026年1月27日）
+const INITIAL_PRICES = {
+  BTC: 88200,
+  ETH: 2925,
+  date: '2026-01-27',
+}
+
 // 计算三种本位的收益统计
 async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWorth: any) {
   const assets = await prisma.asset.findMany()
@@ -105,10 +112,11 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
   const currentAssets = netWorth.total
 
   // ========== USDT 本位计算 ==========
+  // 初始本金使用固定价格（2026年1月27日）
   const initialTotalUSDT =
     initialAssets.USDT +
-    initialAssets.BTC * prices.BTC +
-    initialAssets.ETH * prices.ETH
+    initialAssets.BTC * INITIAL_PRICES.BTC +
+    initialAssets.ETH * INITIAL_PRICES.ETH
 
   const currentTotalUSDT =
     currentAssets.USDT +
@@ -119,11 +127,11 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
   const profitRateUSDT = initialTotalUSDT > 0 ? (profitUSDT / initialTotalUSDT) * 100 : 0
 
   // ========== ETH 本位计算 ==========
-  const ethPrice = prices.ETH || 1
+  // 初始本金使用固定价格
   const initialTotalETH =
     initialAssets.ETH +
-    initialAssets.USDT / ethPrice +
-    initialAssets.BTC * prices.BTC / ethPrice
+    initialAssets.USDT / INITIAL_PRICES.ETH +
+    initialAssets.BTC * INITIAL_PRICES.BTC / INITIAL_PRICES.ETH
 
   const currentTotalETH =
     currentAssets.ETH +
@@ -134,11 +142,11 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
   const profitRateETH = initialTotalETH > 0 ? (profitETH / initialTotalETH) * 100 : 0
 
   // ========== BTC 本位计算 ==========
-  const btcPrice = prices.BTC || 1
+  // 初始本金使用固定价格
   const initialTotalBTC =
     initialAssets.BTC +
-    initialAssets.USDT / btcPrice +
-    initialAssets.ETH * prices.ETH / btcPrice
+    initialAssets.USDT / INITIAL_PRICES.BTC +
+    initialAssets.ETH * INITIAL_PRICES.ETH / INITIAL_PRICES.BTC
 
   const currentTotalBTC =
     currentAssets.BTC +
@@ -191,6 +199,8 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
     currentTotalBTC,
     profitBTC,
     profitRateBTC,
+    // 初始价格信息
+    initialPrices: INITIAL_PRICES,
     // 平台收益
     profitByPlatform,
     // 兼容旧字段

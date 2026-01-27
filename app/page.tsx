@@ -39,6 +39,12 @@ interface Stats {
   currentTotalBTC: number
   profitBTC: number
   profitRateBTC: number
+  // 初始价格信息
+  initialPrices?: {
+    BTC: number
+    ETH: number
+    date: string
+  }
   // 其他
   totalProfit: number
   totalProfitRate: number
@@ -320,7 +326,14 @@ export default function Home() {
 
         {/* 收益概览 - 三种本位 */}
         <div className="card p-6 mb-8">
-          <div className="data-label mb-6">收益概览</div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="data-label">收益概览</div>
+            {stats?.initialPrices && (
+              <div className="text-xs text-[var(--text-muted)]">
+                初始价格（{stats.initialPrices.date}）：BTC ${formatNumber(stats.initialPrices.BTC)} / ETH ${formatNumber(stats.initialPrices.ETH)}
+              </div>
+            )}
+          </div>
 
           {isLoading ? (
             <div className="space-y-6">
