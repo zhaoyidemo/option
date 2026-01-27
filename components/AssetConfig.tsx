@@ -71,9 +71,9 @@ export default function AssetConfig({ onClose, onSuccess }: Props) {
   }
 
   const currencyConfig = {
-    USDT: { label: 'Tether', symbol: '$', color: 'text-[var(--success)]', icon: '₮' },
-    BTC: { label: 'Bitcoin', symbol: '₿', color: 'text-[#f7931a]', icon: '₿' },
-    ETH: { label: 'Ethereum', symbol: 'Ξ', color: 'text-[#627eea]', icon: 'Ξ' },
+    USDT: { label: '泰达币', symbol: '$', color: 'text-[var(--success)]', icon: '₮' },
+    BTC: { label: '比特币', symbol: '₿', color: 'text-[#f7931a]', icon: '₿' },
+    ETH: { label: '以太坊', symbol: 'Ξ', color: 'text-[#627eea]', icon: 'Ξ' },
   }
 
   return (
@@ -84,7 +84,7 @@ export default function AssetConfig({ onClose, onSuccess }: Props) {
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--border-color)]">
             <div>
               <h2 className="text-xl font-bold gradient-text-cyan">资产配置</h2>
-              <p className="text-[var(--text-muted)] text-sm mt-1">Asset Configuration</p>
+              <p className="text-[var(--text-muted)] text-sm mt-1">设置初始资产数量</p>
             </div>
             <button
               onClick={onClose}

@@ -80,7 +80,7 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--border-color)]">
             <div>
               <h2 className="text-xl font-bold gradient-text-gold">新建交易</h2>
-              <p className="text-[var(--text-muted)] text-sm mt-1">Create New Trade</p>
+              <p className="text-[var(--text-muted)] text-sm mt-1">记录双币理财订单</p>
             </div>
             <button
               onClick={onClose}
@@ -229,7 +229,7 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
             <div className="pt-4 border-t border-[var(--border-color)]">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="font-semibold text-[var(--text-primary)]">预期结果</h3>
-                <span className="tag tag-pending text-xs">Expected Outcome</span>
+                <span className="tag tag-pending text-xs">预期收益</span>
               </div>
 
               <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] mb-4">

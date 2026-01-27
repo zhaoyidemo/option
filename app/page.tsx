@@ -136,7 +136,7 @@ export default function Home() {
             <h1 className="text-2xl md:text-3xl font-bold gradient-text-gold tracking-tight">
               双币理财终端
             </h1>
-            <p className="text-[var(--text-muted)] text-sm mt-1">Dual Investment Dashboard</p>
+            <p className="text-[var(--text-muted)] text-sm mt-1">收益追踪与管理平台</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="live-indicator mr-2">实时</div>
@@ -154,7 +154,7 @@ export default function Home() {
           {/* 总净值卡片 - 占两列 */}
           <div className="lg:col-span-2 card p-6 border-glow-gold">
             <div className="flex items-center justify-between mb-6">
-              <div className="data-label">Total Net Worth</div>
+              <div className="data-label">总净值</div>
               <span className="tag tag-pending text-xs">含锁定资产</span>
             </div>
 
@@ -226,8 +226,8 @@ export default function Home() {
           {/* 实时价格卡片 */}
           <div className="card p-6">
             <div className="flex items-center justify-between mb-6">
-              <div className="data-label">Market Prices</div>
-              <div className="live-indicator">LIVE</div>
+              <div className="data-label">实时价格</div>
+              <div className="live-indicator">实时</div>
             </div>
 
             {isLoading ? (
@@ -244,7 +244,7 @@ export default function Home() {
                       <span className="text-[#f7931a] font-bold text-sm">₿</span>
                     </div>
                     <div>
-                      <div className="font-semibold">Bitcoin</div>
+                      <div className="font-semibold">比特币</div>
                       <div className="text-xs text-[var(--text-muted)]">BTC</div>
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export default function Home() {
                       <span className="text-[#627eea] font-bold text-sm">Ξ</span>
                     </div>
                     <div>
-                      <div className="font-semibold">Ethereum</div>
+                      <div className="font-semibold">以太坊</div>
                       <div className="text-xs text-[var(--text-muted)]">ETH</div>
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function Home() {
 
         {/* 收益统计 */}
         <div className="card p-6 mb-8">
-          <div className="data-label mb-6">Performance Overview</div>
+          <div className="data-label mb-6">收益概览</div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -291,7 +291,7 @@ export default function Home() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {/* 累计本金 */}
               <div className="data-cell">
-                <span className="data-label">Initial Capital</span>
+                <span className="data-label">初始本金</span>
                 <span className="data-value font-mono">
                   ${formatCompact(stats.initialTotalUSDT)}
                 </span>
@@ -299,7 +299,7 @@ export default function Home() {
 
               {/* 当前净值 */}
               <div className="data-cell">
-                <span className="data-label">Current Value</span>
+                <span className="data-label">当前净值</span>
                 <span className="data-value font-mono">
                   ${formatCompact(stats.netWorth.totalUSDT)}
                 </span>
@@ -307,7 +307,7 @@ export default function Home() {
 
               {/* 累计收益 */}
               <div className="data-cell">
-                <span className="data-label">Total P&L</span>
+                <span className="data-label">累计盈亏</span>
                 <span className={`data-value font-mono ${stats.totalProfit >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {stats.totalProfit >= 0 ? '+' : ''}{formatCompact(stats.totalProfit)}
                 </span>
@@ -315,7 +315,7 @@ export default function Home() {
 
               {/* 收益率 */}
               <div className="data-cell">
-                <span className="data-label">ROI</span>
+                <span className="data-label">收益率</span>
                 <span className={`data-value font-mono ${stats.totalProfitRate >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {stats.totalProfitRate >= 0 ? '+' : ''}{formatNumber(stats.totalProfitRate)}%
                 </span>
@@ -326,7 +326,7 @@ export default function Home() {
           {/* 按平台统计 */}
           {stats && Object.keys(stats.profitByPlatform).length > 0 && (
             <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
-              <div className="data-label mb-4">Platform Breakdown</div>
+              <div className="data-label mb-4">平台收益</div>
               <div className="flex flex-wrap gap-6">
                 {Object.entries(stats.profitByPlatform).map(([platform, profit]) => (
                   <div key={platform} className="flex items-center gap-3">

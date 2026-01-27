@@ -24,9 +24,14 @@ interface Trade {
   settledAt?: string
 }
 
+type SortField = 'expiryTime' | 'strikePrice' | 'apr'
+type SortOrder = 'asc' | 'desc'
+
 export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
   const [trades, setTrades] = useState<Trade[]>([])
   const [filter, setFilter] = useState<'all' | 'pending' | 'settled'>('all')
+  const [sortField, setSortField] = useState<SortField>('expiryTime')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -61,10 +66,35 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
     }
   }
 
-  const filteredTrades = trades.filter((trade) => {
-    if (filter === 'all') return true
-    return trade.status === filter
-  })
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const filteredAndSortedTrades = trades
+    .filter((trade) => {
+      if (filter === 'all') return true
+      return trade.status === filter
+    })
+    .sort((a, b) => {
+      let comparison = 0
+      switch (sortField) {
+        case 'expiryTime':
+          comparison = new Date(a.expiryTime).getTime() - new Date(b.expiryTime).getTime()
+          break
+        case 'strikePrice':
+          comparison = a.strikePrice - b.strikePrice
+          break
+        case 'apr':
+          comparison = a.apr - b.apr
+          break
+      }
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
 
   const pendingCount = trades.filter((t) => t.status === 'pending').length
   const settledCount = trades.filter((t) => t.status === 'settled').length
@@ -87,40 +117,67 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
     })
   }
 
+  const SortButton = ({ field, label }: { field: SortField; label: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-1 ${
+        sortField === field
+          ? 'bg-[var(--accent-cyan)]/20 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/30'
+          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+      }`}
+    >
+      {label}
+      {sortField === field && (
+        <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+      )}
+    </button>
+  )
+
   return (
     <div className="card overflow-hidden">
-      {/* 筛选标签 */}
-      <div className="flex items-center gap-1 p-4 border-b border-[var(--border-color)]">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            filter === 'all'
-              ? 'bg-[var(--accent-gold)] text-[var(--bg-primary)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
-          }`}
-        >
-          全部 ({trades.length})
-        </button>
-        <button
-          onClick={() => setFilter('pending')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            filter === 'pending'
-              ? 'bg-[var(--warning)] text-[var(--bg-primary)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
-          }`}
-        >
-          进行中 ({pendingCount})
-        </button>
-        <button
-          onClick={() => setFilter('settled')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            filter === 'settled'
-              ? 'bg-[var(--accent-cyan)] text-[var(--bg-primary)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
-          }`}
-        >
-          已结算 ({settledCount})
-        </button>
+      {/* 筛选和排序 */}
+      <div className="p-4 border-b border-[var(--border-color)]">
+        {/* 筛选标签 */}
+        <div className="flex items-center gap-1 mb-3">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              filter === 'all'
+                ? 'bg-[var(--accent-gold)] text-[var(--bg-primary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+            }`}
+          >
+            全部 ({trades.length})
+          </button>
+          <button
+            onClick={() => setFilter('pending')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              filter === 'pending'
+                ? 'bg-[var(--warning)] text-[var(--bg-primary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+            }`}
+          >
+            进行中 ({pendingCount})
+          </button>
+          <button
+            onClick={() => setFilter('settled')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              filter === 'settled'
+                ? 'bg-[var(--accent-cyan)] text-[var(--bg-primary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+            }`}
+          >
+            已结算 ({settledCount})
+          </button>
+        </div>
+
+        {/* 排序选项 */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[var(--text-muted)]">排序：</span>
+          <SortButton field="expiryTime" label="到期时间" />
+          <SortButton field="strikePrice" label="行权价" />
+          <SortButton field="apr" label="收益率" />
+        </div>
       </div>
 
       {/* 列表内容 */}
@@ -131,7 +188,7 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
               <div key={i} className="skeleton h-24 rounded-lg" />
             ))}
           </div>
-        ) : filteredTrades.length === 0 ? (
+        ) : filteredAndSortedTrades.length === 0 ? (
           <div className="p-12 text-center">
             <div className="text-[var(--text-muted)] text-lg mb-2">暂无交易记录</div>
             <div className="text-[var(--text-muted)] text-sm opacity-60">
@@ -140,7 +197,7 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-color)]">
-            {filteredTrades.map((trade, index) => (
+            {filteredAndSortedTrades.map((trade, index) => (
               <div
                 key={trade.id}
                 className="trade-row p-4 animate-slide-up"
@@ -199,7 +256,7 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
                     <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
                       {trade.status === 'settled' && trade.outputAmount ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-[var(--text-muted)] text-sm">结算结果:</span>
+                          <span className="text-[var(--text-muted)] text-sm">结算结果：</span>
                           <span className="font-mono font-semibold text-[var(--accent-cyan)]">
                             {formatNumber(trade.outputAmount, trade.outputCurrency === 'USDT' ? 2 : 6)} {trade.outputCurrency}
                           </span>
@@ -212,13 +269,13 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
                       ) : (
                         <div className="flex flex-wrap items-center gap-4 text-sm">
                           <div>
-                            <span className="text-[var(--text-muted)]">未行权: </span>
+                            <span className="text-[var(--text-muted)]">未行权：</span>
                             <span className="font-mono text-[var(--success)]">
                               +{formatNumber(trade.premium, trade.inputCurrency === 'USDT' ? 2 : 6)} {trade.inputCurrency}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[var(--text-muted)]">行权得: </span>
+                            <span className="text-[var(--text-muted)]">行权得：</span>
                             <span className="font-mono text-[var(--accent-cyan)]">
                               {formatNumber(trade.exerciseAmount, trade.exerciseCurrency === 'USDT' ? 2 : 6)} {trade.exerciseCurrency}
                             </span>
