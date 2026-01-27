@@ -36,9 +36,10 @@ export default function Home() {
   const [showAssetConfig, setShowAssetConfig] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [dbError, setDbError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // 加载统计数据
   useEffect(() => {
+    setIsLoading(true)
     fetch('/api/stats')
       .then((res) => {
         if (!res.ok) {
@@ -48,7 +49,6 @@ export default function Home() {
         return res.json()
       })
       .then((data) => {
-        // 检查是否是默认数据（数据库未配置）
         if (data.prices.BTC === 0 && data.prices.ETH === 0) {
           setDbError(true)
         } else {
@@ -59,7 +59,6 @@ export default function Home() {
       .catch((err) => {
         console.error('Failed to load stats:', err)
         setDbError(true)
-        // 设置默认值，避免页面崩溃
         setStats({
           prices: { BTC: 0, ETH: 0 },
           netWorth: { USDT: 0, BTC: 0, ETH: 0, totalUSDT: 0 },
@@ -69,9 +68,9 @@ export default function Home() {
           profitByPlatform: {},
         })
       })
+      .finally(() => setIsLoading(false))
   }, [refreshKey])
 
-  // 定时刷新价格（每 30 秒）
   useEffect(() => {
     const interval = setInterval(() => {
       setRefreshKey((k) => k + 1)
@@ -80,230 +79,262 @@ export default function Home() {
   }, [])
 
   const formatNumber = (num: number, decimals = 2) => {
-    return num.toLocaleString('zh-CN', {
+    return num.toLocaleString('en-US', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     })
   }
 
+  const formatCompact = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M'
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(2) + 'K'
+    }
+    return num.toFixed(2)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* 数据库未配置警告 */}
+    <div className="min-h-screen grid-bg relative">
+      {/* 顶部光效 */}
+      <div className="top-glow" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8">
+        {/* 警告提示 */}
         {dbError && (
-          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>数据库未配置</strong> - 请在 Railway 上完成以下步骤：
-                </p>
-                <ol className="mt-2 text-sm text-yellow-700 list-decimal list-inside space-y-1">
-                  <li>添加 PostgreSQL 数据库</li>
-                  <li>配置环境变量 DATABASE_URL 和 CMC_API_KEY</li>
-                  <li>运行命令：<code className="bg-yellow-100 px-1 rounded">npx prisma migrate deploy</code></li>
-                </ol>
-                <p className="mt-2 text-sm text-yellow-700">
-                  详细步骤请查看：<a href="https://github.com/zhaoyidemo/option/blob/main/DEPLOYMENT.md" target="_blank" className="underline">DEPLOYMENT.md</a>
-                </p>
+          <div className="alert alert-warning mb-6 animate-slide-up">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm">
+                <p className="font-semibold mb-1">数据库未配置</p>
+                <p className="opacity-80">请在 Railway 上配置 PostgreSQL 数据库和环境变量</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* 价格获取失败警告 */}
         {stats?.priceError && !dbError && (
-          <div className="mb-6 bg-orange-50 border-l-4 border-orange-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-orange-700">
-                  <strong>无法获取实时价格</strong> - CMC API 调用失败。请检查：
-                </p>
-                <ul className="mt-2 text-sm text-orange-700 list-disc list-inside">
-                  <li>CMC_API_KEY 环境变量是否正确配置</li>
-                  <li>API 调用次数是否超过限额（免费版每月 10,000 次）</li>
-                  <li>网络连接是否正常</li>
-                </ul>
-                <p className="mt-2 text-sm text-orange-700">
-                  当前显示的资产数量是正确的，但总净值为 0（因为价格为 0）
-                </p>
+          <div className="alert alert-error mb-6 animate-slide-up">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm">
+                <p className="font-semibold mb-1">价格数据获取失败</p>
+                <p className="opacity-80">CMC API 调用失败，请检查 API Key 配置</p>
               </div>
             </div>
           </div>
         )}
 
         {/* 头部 */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">双币理财看板</h1>
-          <div className="space-x-2">
-            <button
-              onClick={() => setShowAssetConfig(true)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold gradient-text-gold tracking-tight">
+              双币理财终端
+            </h1>
+            <p className="text-[var(--text-muted)] text-sm mt-1">Dual Investment Dashboard</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="live-indicator mr-2">实时</div>
+            <button onClick={() => setShowAssetConfig(true)} className="btn-secondary">
               资产配置
             </button>
-            <button
-              onClick={() => setShowNewTrade(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
+            <button onClick={() => setShowNewTrade(true)} className="btn-primary">
               + 新建交易
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* 实时价格和总净值 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* 实时价格 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">实时价格</h2>
-            {stats ? (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">BTC:</span>
-                  <span className="text-2xl font-bold text-orange-600">
-                    ${formatNumber(stats.prices.BTC)}
+        {/* 主数据面板 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* 总净值卡片 - 占两列 */}
+          <div className="lg:col-span-2 card p-6 border-glow-gold">
+            <div className="flex items-center justify-between mb-6">
+              <div className="data-label">Total Net Worth</div>
+              <span className="tag tag-pending text-xs">含锁定资产</span>
+            </div>
+
+            {isLoading ? (
+              <div className="skeleton h-16 w-64 rounded mb-6" />
+            ) : stats ? (
+              <div className="mb-6">
+                <div className="text-4xl md:text-5xl font-bold font-mono gradient-text-gold tracking-tight">
+                  ${formatNumber(stats.netWorth.totalUSDT)}
+                </div>
+                <div className="text-[var(--text-muted)] text-sm mt-2">
+                  ≈ ¥{formatNumber(stats.netWorth.totalUSDT * 7.2)}
+                </div>
+              </div>
+            ) : null}
+
+            {/* 资产明细 */}
+            {stats && (
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border-color)]">
+                {/* USDT */}
+                <div className="data-cell">
+                  <span className="data-label">USDT</span>
+                  <span className="data-value data-value-sm font-mono">
+                    {formatCompact(stats.netWorth.total?.USDT ?? stats.netWorth.USDT)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">ETH:</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    ${formatNumber(stats.prices.ETH)}
+                {/* BTC */}
+                <div className="data-cell">
+                  <span className="data-label">BTC</span>
+                  <span className="data-value data-value-sm font-mono text-[#f7931a]">
+                    {formatNumber(stats.netWorth.total?.BTC ?? stats.netWorth.BTC, 4)}
+                  </span>
+                </div>
+                {/* ETH */}
+                <div className="data-cell">
+                  <span className="data-label">ETH</span>
+                  <span className="data-value data-value-sm font-mono text-[#627eea]">
+                    {formatNumber(stats.netWorth.total?.ETH ?? stats.netWorth.ETH, 4)}
                   </span>
                 </div>
               </div>
-            ) : (
-              <div className="text-gray-400">加载中...</div>
+            )}
+
+            {/* 锁定资产 */}
+            {stats?.netWorth.locked && (stats.netWorth.locked.USDT > 0 || stats.netWorth.locked.BTC > 0 || stats.netWorth.locked.ETH > 0) && (
+              <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                <div className="data-label mb-3 text-[var(--warning)]">🔒 双币理财锁定中</div>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {stats.netWorth.locked.USDT > 0 && (
+                    <span className="text-[var(--warning)] font-mono">
+                      {formatNumber(stats.netWorth.locked.USDT)} USDT
+                    </span>
+                  )}
+                  {stats.netWorth.locked.BTC > 0 && (
+                    <span className="text-[var(--warning)] font-mono">
+                      {formatNumber(stats.netWorth.locked.BTC, 6)} BTC
+                    </span>
+                  )}
+                  {stats.netWorth.locked.ETH > 0 && (
+                    <span className="text-[var(--warning)] font-mono">
+                      {formatNumber(stats.netWorth.locked.ETH, 6)} ETH
+                    </span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          {/* 总净值 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">总净值</h2>
-            {stats ? (
-              <div>
-                <div className="text-3xl font-bold text-green-600 mb-4">
-                  ≈ {formatNumber(stats.netWorth.totalUSDT)} USDT
-                </div>
+          {/* 实时价格卡片 */}
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="data-label">Market Prices</div>
+              <div className="live-indicator">LIVE</div>
+            </div>
 
-                {/* 总持仓 */}
-                <div className="space-y-2 text-sm">
-                  {/* USDT */}
-                  {(stats.netWorth.total?.USDT ?? stats.netWorth.USDT) > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">USDT:</span>
-                      <span className="font-medium">
-                        {formatNumber(stats.netWorth.total?.USDT ?? stats.netWorth.USDT)}
-                      </span>
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="skeleton h-12 w-full rounded" />
+                <div className="skeleton h-12 w-full rounded" />
+              </div>
+            ) : stats ? (
+              <div className="space-y-4">
+                {/* BTC 价格 */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-secondary)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#f7931a]/20 flex items-center justify-center">
+                      <span className="text-[#f7931a] font-bold text-sm">₿</span>
                     </div>
-                  )}
-
-                  {/* BTC */}
-                  {(stats.netWorth.total?.BTC ?? stats.netWorth.BTC) > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">BTC:</span>
-                      <span className="font-medium">
-                        {formatNumber(stats.netWorth.total?.BTC ?? stats.netWorth.BTC, 6)}
-                        <span className="text-gray-400 ml-1">
-                          (≈${formatNumber((stats.netWorth.total?.BTC ?? stats.netWorth.BTC) * stats.prices.BTC)})
-                        </span>
-                      </span>
-                    </div>
-                  )}
-
-                  {/* ETH */}
-                  {(stats.netWorth.total?.ETH ?? stats.netWorth.ETH) > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">ETH:</span>
-                      <span className="font-medium">
-                        {formatNumber(stats.netWorth.total?.ETH ?? stats.netWorth.ETH, 6)}
-                        <span className="text-gray-400 ml-1">
-                          (≈${formatNumber((stats.netWorth.total?.ETH ?? stats.netWorth.ETH) * stats.prices.ETH)})
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 锁定资产（投入双币理财） */}
-                {stats.netWorth.locked && (stats.netWorth.locked.USDT > 0 || stats.netWorth.locked.BTC > 0 || stats.netWorth.locked.ETH > 0) && (
-                  <div className="mt-4 pt-3 border-t border-gray-100">
-                    <div className="text-xs text-orange-600 font-medium mb-2">投入双币理财（锁定中）</div>
-                    <div className="space-y-1 text-sm">
-                      {stats.netWorth.locked.USDT > 0 && (
-                        <div className="flex justify-between text-orange-600">
-                          <span>USDT:</span>
-                          <span>{formatNumber(stats.netWorth.locked.USDT)}</span>
-                        </div>
-                      )}
-                      {stats.netWorth.locked.BTC > 0 && (
-                        <div className="flex justify-between text-orange-600">
-                          <span>BTC:</span>
-                          <span>{formatNumber(stats.netWorth.locked.BTC, 6)}</span>
-                        </div>
-                      )}
-                      {stats.netWorth.locked.ETH > 0 && (
-                        <div className="flex justify-between text-orange-600">
-                          <span>ETH:</span>
-                          <span>{formatNumber(stats.netWorth.locked.ETH, 6)}</span>
-                        </div>
-                      )}
+                    <div>
+                      <div className="font-semibold">Bitcoin</div>
+                      <div className="text-xs text-[var(--text-muted)]">BTC</div>
                     </div>
                   </div>
-                )}
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-lg text-[#f7931a]">
+                      ${formatNumber(stats.prices.BTC)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ETH 价格 */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-secondary)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#627eea]/20 flex items-center justify-center">
+                      <span className="text-[#627eea] font-bold text-sm">Ξ</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold">Ethereum</div>
+                      <div className="text-xs text-[var(--text-muted)]">ETH</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-lg text-[#627eea]">
+                      ${formatNumber(stats.prices.ETH)}
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="text-gray-400">加载中...</div>
-            )}
+            ) : null}
           </div>
         </div>
 
         {/* 收益统计 */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">收益统计</h2>
-          {stats ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <div className="text-sm text-gray-600 mb-1">累计本金</div>
-                <div className="text-2xl font-bold">
-                  {formatNumber(stats.initialTotalUSDT)} USDT
-                </div>
+        <div className="card p-6 mb-8">
+          <div className="data-label mb-6">Performance Overview</div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton h-20 rounded" />
+              ))}
+            </div>
+          ) : stats ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {/* 累计本金 */}
+              <div className="data-cell">
+                <span className="data-label">Initial Capital</span>
+                <span className="data-value font-mono">
+                  ${formatCompact(stats.initialTotalUSDT)}
+                </span>
               </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">累计收益</div>
-                <div className={`text-2xl font-bold ${stats.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {stats.totalProfit >= 0 ? '+' : ''}{formatNumber(stats.totalProfit)} USDT
-                </div>
+
+              {/* 当前净值 */}
+              <div className="data-cell">
+                <span className="data-label">Current Value</span>
+                <span className="data-value font-mono">
+                  ${formatCompact(stats.netWorth.totalUSDT)}
+                </span>
               </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">整体收益率</div>
-                <div className={`text-2xl font-bold ${stats.totalProfitRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+
+              {/* 累计收益 */}
+              <div className="data-cell">
+                <span className="data-label">Total P&L</span>
+                <span className={`data-value font-mono ${stats.totalProfit >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  {stats.totalProfit >= 0 ? '+' : ''}{formatCompact(stats.totalProfit)}
+                </span>
+              </div>
+
+              {/* 收益率 */}
+              <div className="data-cell">
+                <span className="data-label">ROI</span>
+                <span className={`data-value font-mono ${stats.totalProfitRate >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {stats.totalProfitRate >= 0 ? '+' : ''}{formatNumber(stats.totalProfitRate)}%
-                </div>
+                </span>
               </div>
             </div>
-          ) : (
-            <div className="text-gray-400">加载中...</div>
-          )}
+          ) : null}
 
           {/* 按平台统计 */}
           {stats && Object.keys(stats.profitByPlatform).length > 0 && (
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="text-sm font-semibold mb-3 text-gray-700">按平台统计</h3>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
+              <div className="data-label mb-4">Platform Breakdown</div>
+              <div className="flex flex-wrap gap-6">
                 {Object.entries(stats.profitByPlatform).map(([platform, profit]) => (
-                  <div key={platform} className="flex justify-between">
-                    <span className="text-gray-600">{platform === 'binance' ? '币安' : '欧易'}:</span>
-                    <span className={`font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {profit >= 0 ? '+' : ''}{formatNumber(profit)} USDT
+                  <div key={platform} className="flex items-center gap-3">
+                    <span className={`tag ${platform === 'binance' ? 'tag-binance' : 'tag-okx'}`}>
+                      {platform === 'binance' ? '币安' : '欧易'}
+                    </span>
+                    <span className={`font-mono font-semibold ${profit >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {profit >= 0 ? '+' : ''}{formatNumber(profit)}
                     </span>
                   </div>
                 ))}
@@ -315,7 +346,7 @@ export default function Home() {
         {/* 交易列表 */}
         <TradeList onRefresh={() => setRefreshKey((k) => k + 1)} />
 
-        {/* 新建交易表单 */}
+        {/* 模态框 */}
         {showNewTrade && (
           <NewTradeForm
             onClose={() => setShowNewTrade(false)}
@@ -326,7 +357,6 @@ export default function Home() {
           />
         )}
 
-        {/* 资产配置 */}
         {showAssetConfig && (
           <AssetConfig
             onClose={() => setShowAssetConfig(false)}

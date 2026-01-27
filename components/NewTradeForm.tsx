@@ -21,9 +21,11 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
     exerciseAmount: '',
     exerciseCurrency: 'ETH',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
 
     try {
       const response = await fetch('/api/trades', {
@@ -40,6 +42,8 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
     } catch (err) {
       console.error('Failed to create trade:', err)
       alert('创建失败')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -48,14 +52,11 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
     setFormData((prev) => {
       const newData = { ...prev, [name]: value }
 
-      // 自动更新相关字段
       if (name === 'direction') {
         if (value === 'buy_low') {
-          // 低买：USDT → 币
           newData.inputCurrency = 'USDT'
           newData.exerciseCurrency = prev.coin
         } else {
-          // 高卖：币 → USDT
           newData.inputCurrency = prev.coin
           newData.exerciseCurrency = 'USDT'
         }
@@ -72,113 +73,140 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">新建交易</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
-              ×
+          {/* 头部 */}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--border-color)]">
+            <div>
+              <h2 className="text-xl font-bold gradient-text-gold">新建交易</h2>
+              <p className="text-[var(--text-muted)] text-sm mt-1">Create New Trade</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* 平台和币种 */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">平台</label>
+                <label className="data-label mb-2 block">交易平台</label>
                 <select
                   name="platform"
                   value={formData.platform}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="select-field"
                   required
                 >
-                  <option value="binance">币安</option>
-                  <option value="okx">欧易</option>
+                  <option value="binance">币安 Binance</option>
+                  <option value="okx">欧易 OKX</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">币种</label>
+                <label className="data-label mb-2 block">交易币种</label>
                 <select
                   name="coin"
                   value={formData.coin}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="select-field"
                   required
                 >
-                  <option value="BTC">BTC</option>
-                  <option value="ETH">ETH</option>
+                  <option value="BTC">BTC Bitcoin</option>
+                  <option value="ETH">ETH Ethereum</option>
                 </select>
               </div>
             </div>
 
             {/* 方向 */}
             <div>
-              <label className="block text-sm font-medium mb-1">方向</label>
-              <select
-                name="direction"
-                value={formData.direction}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-                required
-              >
-                <option value="buy_low">低买（看跌期权）</option>
-                <option value="sell_high">高卖（看涨期权）</option>
-              </select>
+              <label className="data-label mb-2 block">交易方向</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'direction', value: 'buy_low' } } as any)}
+                  className={`p-4 rounded-lg border transition-all ${
+                    formData.direction === 'buy_low'
+                      ? 'border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]'
+                      : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--border-highlight)]'
+                  }`}
+                >
+                  <div className="font-semibold">低买</div>
+                  <div className="text-xs mt-1 opacity-70">卖出看跌期权</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'direction', value: 'sell_high' } } as any)}
+                  className={`p-4 rounded-lg border transition-all ${
+                    formData.direction === 'sell_high'
+                      ? 'border-[var(--danger)] bg-[var(--danger)]/10 text-[var(--danger)]'
+                      : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--border-highlight)]'
+                  }`}
+                >
+                  <div className="font-semibold">高卖</div>
+                  <div className="text-xs mt-1 opacity-70">卖出看涨期权</div>
+                </button>
+              </div>
             </div>
 
             {/* 投入信息 */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">投入数量</label>
+                <label className="data-label mb-2 block">投入数量</label>
                 <input
                   type="number"
                   name="inputAmount"
                   value={formData.inputAmount}
                   onChange={handleChange}
                   step="0.000001"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="input-field"
+                  placeholder="0.00"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">投入币种</label>
-                <input
-                  type="text"
-                  value={formData.inputCurrency}
-                  className="w-full border rounded-lg px-3 py-2 bg-gray-100"
-                  disabled
-                />
+                <label className="data-label mb-2 block">投入币种</label>
+                <div className="input-field bg-[var(--bg-card)] cursor-not-allowed">
+                  <span className={formData.inputCurrency === 'USDT' ? '' : formData.inputCurrency === 'BTC' ? 'text-[#f7931a]' : 'text-[#627eea]'}>
+                    {formData.inputCurrency}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* 期权信息 */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">行权价</label>
+                <label className="data-label mb-2 block">行权价 (USD)</label>
                 <input
                   type="number"
                   name="strikePrice"
                   value={formData.strikePrice}
                   onChange={handleChange}
                   step="0.01"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="input-field"
+                  placeholder="0.00"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">年化收益率 (%)</label>
+                <label className="data-label mb-2 block">年化收益率 (%)</label>
                 <input
                   type="number"
                   name="apr"
                   value={formData.apr}
                   onChange={handleChange}
                   step="0.01"
-                  className="w-full border rounded-lg px-3 py-2"
+                  className="input-field"
+                  placeholder="0.00"
                   required
                 />
               </div>
@@ -186,43 +214,50 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
 
             {/* 到期时间 */}
             <div>
-              <label className="block text-sm font-medium mb-1">到期时间</label>
+              <label className="data-label mb-2 block">到期时间</label>
               <input
                 type="datetime-local"
                 name="expiryTime"
                 value={formData.expiryTime}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
+                className="input-field"
                 required
               />
             </div>
 
             {/* 预期结果 */}
-            <div className="border-t pt-4">
-              <h3 className="font-semibold mb-3">预期结果</h3>
+            <div className="pt-4 border-t border-[var(--border-color)]">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="font-semibold text-[var(--text-primary)]">预期结果</h3>
+                <span className="tag tag-pending text-xs">Expected Outcome</span>
+              </div>
 
-              <div className="mb-3 p-3 bg-blue-50 rounded text-xs text-blue-800">
-                <p className="font-semibold mb-1">说明：</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>未行权收益</strong>：只填收益部分，不含本金</li>
-                  <li><strong>行权得到</strong>：填转换后的币数量
-                    {formData.direction === 'buy_low' && formData.inputAmount && formData.strikePrice && (
-                      <span className="text-green-700">
-                        （≈ {(parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)} {formData.exerciseCurrency}）
-                      </span>
-                    )}
-                    {formData.direction === 'sell_high' && formData.inputAmount && formData.strikePrice && (
-                      <span className="text-green-700">
-                        （≈ {(parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)} {formData.exerciseCurrency}）
-                      </span>
-                    )}
-                  </li>
-                </ul>
+              <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] mb-4">
+                <div className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--accent-cyan)]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="space-y-1">
+                    <p><span className="text-[var(--success)]">未行权收益</span>：只填收益部分，不含本金</p>
+                    <p><span className="text-[var(--accent-cyan)]">行权得到</span>：填转换后的币数量
+                      {formData.direction === 'buy_low' && formData.inputAmount && formData.strikePrice && (
+                        <span className="text-[var(--success)] ml-1">
+                          （参考值：{(parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)} {formData.exerciseCurrency}）
+                        </span>
+                      )}
+                      {formData.direction === 'sell_high' && formData.inputAmount && formData.strikePrice && (
+                        <span className="text-[var(--success)] ml-1">
+                          （参考值：{(parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)} {formData.exerciseCurrency}）
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="data-label mb-2 block">
                     未行权收益 ({formData.inputCurrency})
                   </label>
                   <input
@@ -231,20 +266,22 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                     value={formData.premium}
                     onChange={handleChange}
                     step="0.000001"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="input-field"
                     placeholder="只填收益，不含本金"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    到期后得到：{formData.inputAmount && formData.premium
-                      ? `${(parseFloat(formData.inputAmount) + parseFloat(formData.premium)).toFixed(6)} ${formData.inputCurrency}`
-                      : '本金 + 收益'}
-                  </p>
+                  {formData.inputAmount && formData.premium && (
+                    <p className="text-xs text-[var(--text-muted)] mt-2">
+                      到期后得到：<span className="text-[var(--success)] font-mono">
+                        {(parseFloat(formData.inputAmount) + parseFloat(formData.premium)).toFixed(6)} {formData.inputCurrency}
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    行权得到数量 ({formData.exerciseCurrency})
+                  <label className="data-label mb-2 block">
+                    行权得到 ({formData.exerciseCurrency})
                   </label>
                   <input
                     type="number"
@@ -252,7 +289,7 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                     value={formData.exerciseAmount}
                     onChange={handleChange}
                     step="0.000001"
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="input-field"
                     placeholder="转换后的币数量"
                     required
                   />
@@ -263,8 +300,11 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                         const calculated = (parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)
                         setFormData(prev => ({ ...prev, exerciseAmount: calculated }))
                       }}
-                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                      className="text-xs text-[var(--accent-cyan)] hover:text-[var(--accent-cyan-dim)] mt-2 flex items-center gap-1"
                     >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                       自动计算：{(parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)}
                     </button>
                   )}
@@ -275,8 +315,11 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                         const calculated = (parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)
                         setFormData(prev => ({ ...prev, exerciseAmount: calculated }))
                       }}
-                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                      className="text-xs text-[var(--accent-cyan)] hover:text-[var(--accent-cyan-dim)] mt-2 flex items-center gap-1"
                     >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
                       自动计算：{(parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)}
                     </button>
                   )}
@@ -289,15 +332,16 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+                className="btn-secondary flex-1"
               >
                 取消
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={isSubmitting}
+                className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                创建
+                {isSubmitting ? '创建中...' : '创建交易'}
               </button>
             </div>
           </form>
