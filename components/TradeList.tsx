@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 
 interface Trade {
   id: string
@@ -36,9 +34,15 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
 
   const loadTrades = () => {
     fetch('/api/trades')
-      .then((res) => res.json())
-      .then((data) => setTrades(data))
-      .catch((err) => console.error('Failed to load trades:', err))
+      .then((res) => {
+        if (!res.ok) throw new Error('API failed')
+        return res.json()
+      })
+      .then((data) => setTrades(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('Failed to load trades:', err)
+        setTrades([])
+      })
   }
 
   const deleteTrade = async (id: string) => {

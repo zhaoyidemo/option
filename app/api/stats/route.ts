@@ -107,6 +107,17 @@ async function calculateProfitStats() {
 // GET - 获取统计数据
 export async function GET() {
   try {
+    // 先尝试获取价格
+    let prices
+    try {
+      prices = await getCurrentPrices()
+    } catch (priceError) {
+      console.error('Failed to fetch prices from CMC:', priceError)
+      // 使用默认价格
+      prices = { BTC: 0, ETH: 0 }
+    }
+
+    // 然后计算统计数据
     const netWorthData = await calculateNetWorth()
     const profitStats = await calculateProfitStats()
 
@@ -116,6 +127,16 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error calculating stats:', error)
-    return NextResponse.json({ error: 'Failed to calculate stats' }, { status: 500 })
+
+    // 返回默认数据而不是错误，避免前端崩溃
+    return NextResponse.json({
+      prices: { BTC: 0, ETH: 0 },
+      holdings: { USDT: 0, BTC: 0, ETH: 0 },
+      netWorth: { USDT: 0, BTC: 0, ETH: 0, totalUSDT: 0 },
+      initialTotalUSDT: 0,
+      totalProfit: 0,
+      totalProfitRate: 0,
+      profitByPlatform: {},
+    })
   }
 }
