@@ -133,6 +133,7 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
     initialAssets.USDT / INITIAL_PRICES.ETH +
     initialAssets.BTC * INITIAL_PRICES.BTC / INITIAL_PRICES.ETH
 
+  const ethPrice = prices.ETH || 1
   const currentTotalETH =
     currentAssets.ETH +
     currentAssets.USDT / ethPrice +
@@ -148,6 +149,7 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
     initialAssets.USDT / INITIAL_PRICES.BTC +
     initialAssets.ETH * INITIAL_PRICES.ETH / INITIAL_PRICES.BTC
 
+  const btcPrice = prices.BTC || 1
   const currentTotalBTC =
     currentAssets.BTC +
     currentAssets.USDT / btcPrice +
