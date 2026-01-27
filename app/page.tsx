@@ -23,7 +23,22 @@ interface Stats {
     }
     totalUSDT: number
   }
+  // USDT 本位
   initialTotalUSDT: number
+  currentTotalUSDT: number
+  profitUSDT: number
+  profitRateUSDT: number
+  // ETH 本位
+  initialTotalETH: number
+  currentTotalETH: number
+  profitETH: number
+  profitRateETH: number
+  // BTC 本位
+  initialTotalBTC: number
+  currentTotalBTC: number
+  profitBTC: number
+  profitRateBTC: number
+  // 其他
   totalProfit: number
   totalProfitRate: number
   profitByPlatform: Record<string, number>
@@ -63,6 +78,17 @@ export default function Home() {
           prices: { BTC: 0, ETH: 0 },
           netWorth: { USDT: 0, BTC: 0, ETH: 0, totalUSDT: 0 },
           initialTotalUSDT: 0,
+          currentTotalUSDT: 0,
+          profitUSDT: 0,
+          profitRateUSDT: 0,
+          initialTotalETH: 0,
+          currentTotalETH: 0,
+          profitETH: 0,
+          profitRateETH: 0,
+          initialTotalBTC: 0,
+          currentTotalBTC: 0,
+          profitBTC: 0,
+          profitRateBTC: 0,
           totalProfit: 0,
           totalProfitRate: 0,
           profitByPlatform: {},
@@ -277,48 +303,118 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 收益统计 */}
+        {/* 收益概览 - 三种本位 */}
         <div className="card p-6 mb-8">
           <div className="data-label mb-6">收益概览</div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="skeleton h-20 rounded" />
+            <div className="space-y-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="skeleton h-24 rounded" />
               ))}
             </div>
           ) : stats ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {/* 累计本金 */}
-              <div className="data-cell">
-                <span className="data-label">初始本金</span>
-                <span className="data-value font-mono">
-                  ${formatCompact(stats.initialTotalUSDT)}
-                </span>
+            <div className="space-y-6">
+              {/* USDT 本位 */}
+              <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="tag tag-pending">USDT 本位</span>
+                  <span className="text-xs text-[var(--text-muted)]">以美元稳定币计价</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="data-cell">
+                    <span className="data-label">初始本金</span>
+                    <span className="data-value data-value-sm font-mono">
+                      ${formatCompact(stats.initialTotalUSDT)}
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">当前净值</span>
+                    <span className="data-value data-value-sm font-mono">
+                      ${formatCompact(stats.currentTotalUSDT)}
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">累计盈亏</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitUSDT >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitUSDT >= 0 ? '+' : ''}{formatCompact(stats.profitUSDT)}
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">收益率</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitRateUSDT >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitRateUSDT >= 0 ? '+' : ''}{formatNumber(stats.profitRateUSDT)}%
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* 当前净值 */}
-              <div className="data-cell">
-                <span className="data-label">当前净值</span>
-                <span className="data-value font-mono">
-                  ${formatCompact(stats.netWorth.totalUSDT)}
-                </span>
+              {/* ETH 本位 */}
+              <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[#627eea]/30">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="tag tag-eth">ETH 本位</span>
+                  <span className="text-xs text-[var(--text-muted)]">以以太坊计价</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="data-cell">
+                    <span className="data-label">初始本金</span>
+                    <span className="data-value data-value-sm font-mono text-[#627eea]">
+                      {formatNumber(stats.initialTotalETH, 4)} ETH
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">当前净值</span>
+                    <span className="data-value data-value-sm font-mono text-[#627eea]">
+                      {formatNumber(stats.currentTotalETH, 4)} ETH
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">累计盈亏</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitETH >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitETH >= 0 ? '+' : ''}{formatNumber(stats.profitETH, 4)} ETH
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">收益率</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitRateETH >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitRateETH >= 0 ? '+' : ''}{formatNumber(stats.profitRateETH)}%
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* 累计收益 */}
-              <div className="data-cell">
-                <span className="data-label">累计盈亏</span>
-                <span className={`data-value font-mono ${stats.totalProfit >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-                  {stats.totalProfit >= 0 ? '+' : ''}{formatCompact(stats.totalProfit)}
-                </span>
-              </div>
-
-              {/* 收益率 */}
-              <div className="data-cell">
-                <span className="data-label">收益率</span>
-                <span className={`data-value font-mono ${stats.totalProfitRate >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-                  {stats.totalProfitRate >= 0 ? '+' : ''}{formatNumber(stats.totalProfitRate)}%
-                </span>
+              {/* BTC 本位 */}
+              <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[#f7931a]/30">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="tag tag-btc">BTC 本位</span>
+                  <span className="text-xs text-[var(--text-muted)]">以比特币计价</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="data-cell">
+                    <span className="data-label">初始本金</span>
+                    <span className="data-value data-value-sm font-mono text-[#f7931a]">
+                      {formatNumber(stats.initialTotalBTC, 6)} BTC
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">当前净值</span>
+                    <span className="data-value data-value-sm font-mono text-[#f7931a]">
+                      {formatNumber(stats.currentTotalBTC, 6)} BTC
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">累计盈亏</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitBTC >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitBTC >= 0 ? '+' : ''}{formatNumber(stats.profitBTC, 6)} BTC
+                    </span>
+                  </div>
+                  <div className="data-cell">
+                    <span className="data-label">收益率</span>
+                    <span className={`data-value data-value-sm font-mono ${stats.profitRateBTC >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                      {stats.profitRateBTC >= 0 ? '+' : ''}{formatNumber(stats.profitRateBTC)}%
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
@@ -326,7 +422,7 @@ export default function Home() {
           {/* 按平台统计 */}
           {stats && Object.keys(stats.profitByPlatform).length > 0 && (
             <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
-              <div className="data-label mb-4">平台收益</div>
+              <div className="data-label mb-4">平台收益（USDT 本位）</div>
               <div className="flex flex-wrap gap-6">
                 {Object.entries(stats.profitByPlatform).map(([platform, profit]) => (
                   <div key={platform} className="flex items-center gap-3">

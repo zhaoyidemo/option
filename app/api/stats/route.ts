@@ -63,33 +63,73 @@ async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   return { holdings, netWorth, prices }
 }
 
-// 计算收益统计
+// 计算三种本位的收益统计
 async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWorth: any) {
   const assets = await prisma.asset.findMany()
   const trades = await prisma.trade.findMany()
 
-  // 初始资产总值（折算成 USDT）
-  let initialTotalUSDT = 0
+  // 初始资产（原始数量）
+  const initialAssets = {
+    USDT: 0,
+    BTC: 0,
+    ETH: 0,
+  }
   assets.forEach((asset) => {
-    if (asset.currency === 'USDT') {
-      initialTotalUSDT += asset.initialAmount
-    } else if (asset.currency === 'BTC') {
-      initialTotalUSDT += asset.initialAmount * prices.BTC
-    } else if (asset.currency === 'ETH') {
-      initialTotalUSDT += asset.initialAmount * prices.ETH
-    }
+    initialAssets[asset.currency as keyof typeof initialAssets] = asset.initialAmount
   })
 
-  // 总收益
-  const totalProfit = netWorth.totalUSDT - initialTotalUSDT
-  const totalProfitRate = initialTotalUSDT > 0 ? (totalProfit / initialTotalUSDT) * 100 : 0
+  // 当前总持仓
+  const currentAssets = netWorth.total
 
-  // 按平台统计收益
+  // ========== USDT 本位计算 ==========
+  const initialTotalUSDT =
+    initialAssets.USDT +
+    initialAssets.BTC * prices.BTC +
+    initialAssets.ETH * prices.ETH
+
+  const currentTotalUSDT =
+    currentAssets.USDT +
+    currentAssets.BTC * prices.BTC +
+    currentAssets.ETH * prices.ETH
+
+  const profitUSDT = currentTotalUSDT - initialTotalUSDT
+  const profitRateUSDT = initialTotalUSDT > 0 ? (profitUSDT / initialTotalUSDT) * 100 : 0
+
+  // ========== ETH 本位计算 ==========
+  const ethPrice = prices.ETH || 1
+  const initialTotalETH =
+    initialAssets.ETH +
+    initialAssets.USDT / ethPrice +
+    initialAssets.BTC * prices.BTC / ethPrice
+
+  const currentTotalETH =
+    currentAssets.ETH +
+    currentAssets.USDT / ethPrice +
+    currentAssets.BTC * prices.BTC / ethPrice
+
+  const profitETH = currentTotalETH - initialTotalETH
+  const profitRateETH = initialTotalETH > 0 ? (profitETH / initialTotalETH) * 100 : 0
+
+  // ========== BTC 本位计算 ==========
+  const btcPrice = prices.BTC || 1
+  const initialTotalBTC =
+    initialAssets.BTC +
+    initialAssets.USDT / btcPrice +
+    initialAssets.ETH * prices.ETH / btcPrice
+
+  const currentTotalBTC =
+    currentAssets.BTC +
+    currentAssets.USDT / btcPrice +
+    currentAssets.ETH * prices.ETH / btcPrice
+
+  const profitBTC = currentTotalBTC - initialTotalBTC
+  const profitRateBTC = initialTotalBTC > 0 ? (profitBTC / initialTotalBTC) * 100 : 0
+
+  // 按平台统计收益（USDT本位）
   const profitByPlatform: Record<string, number> = {}
 
   trades.forEach((trade) => {
     if (trade.status === 'settled' && trade.outputAmount && trade.inputAmount) {
-      // 计算这笔交易的收益（折算成 USDT）
       let profit = 0
 
       if (trade.outputCurrency === 'USDT') {
@@ -113,10 +153,26 @@ async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWor
   })
 
   return {
+    // USDT 本位
     initialTotalUSDT,
-    totalProfit,
-    totalProfitRate,
+    currentTotalUSDT,
+    profitUSDT,
+    profitRateUSDT,
+    // ETH 本位
+    initialTotalETH,
+    currentTotalETH,
+    profitETH,
+    profitRateETH,
+    // BTC 本位
+    initialTotalBTC,
+    currentTotalBTC,
+    profitBTC,
+    profitRateBTC,
+    // 平台收益
     profitByPlatform,
+    // 兼容旧字段
+    totalProfit: profitUSDT,
+    totalProfitRate: profitRateUSDT,
   }
 }
 
@@ -133,8 +189,6 @@ export async function GET() {
     } catch (error) {
       console.error('Failed to fetch prices from CMC:', error)
       priceError = true
-      // 如果价格获取失败，尝试使用默认价格以便至少显示资产数量
-      // 实际应用中可以从缓存或其他来源获取价格
     }
 
     // 计算统计数据
@@ -144,17 +198,27 @@ export async function GET() {
     return NextResponse.json({
       ...netWorthData,
       ...profitStats,
-      priceError, // 告知前端价格获取是否失败
+      priceError,
     })
   } catch (error) {
     console.error('Error calculating stats:', error)
 
-    // 返回默认数据而不是错误，避免前端崩溃
     return NextResponse.json({
       prices: { BTC: 0, ETH: 0 },
       holdings: { USDT: 0, BTC: 0, ETH: 0 },
       netWorth: { USDT: 0, BTC: 0, ETH: 0, totalUSDT: 0 },
       initialTotalUSDT: 0,
+      currentTotalUSDT: 0,
+      profitUSDT: 0,
+      profitRateUSDT: 0,
+      initialTotalETH: 0,
+      currentTotalETH: 0,
+      profitETH: 0,
+      profitRateETH: 0,
+      initialTotalBTC: 0,
+      currentTotalBTC: 0,
+      profitBTC: 0,
+      profitRateBTC: 0,
       totalProfit: 0,
       totalProfitRate: 0,
       profitByPlatform: {},
