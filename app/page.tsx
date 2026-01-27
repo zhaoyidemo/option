@@ -194,20 +194,46 @@ export default function Home() {
                   ≈ {formatNumber(stats.netWorth.totalUSDT)} USDT
                 </div>
                 <div className="space-y-1 text-sm">
+                  {/* USDT */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">USDT:</span>
-                    <span>{formatNumber(stats.netWorth.USDT)}</span>
+                    <span>
+                      {formatNumber(stats.netWorth.total?.USDT ?? stats.netWorth.USDT)}
+                      {stats.netWorth.locked?.USDT ? (
+                        <span className="text-orange-500 text-xs ml-1">
+                          (锁定 {formatNumber(stats.netWorth.locked.USDT)})
+                        </span>
+                      ) : null}
+                    </span>
                   </div>
+                  {/* BTC */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">BTC:</span>
                     <span>
-                      {formatNumber(stats.netWorth.BTC, 6)} (≈{formatNumber(stats.netWorth.BTC * stats.prices.BTC)})
+                      {formatNumber(stats.netWorth.total?.BTC ?? stats.netWorth.BTC, 6)}
+                      {stats.netWorth.locked?.BTC ? (
+                        <span className="text-orange-500 text-xs ml-1">
+                          (锁定 {formatNumber(stats.netWorth.locked.BTC, 6)})
+                        </span>
+                      ) : null}
+                      <span className="text-gray-400 ml-1">
+                        (≈{formatNumber((stats.netWorth.total?.BTC ?? stats.netWorth.BTC) * stats.prices.BTC)})
+                      </span>
                     </span>
                   </div>
+                  {/* ETH */}
                   <div className="flex justify-between">
                     <span className="text-gray-600">ETH:</span>
                     <span>
-                      {formatNumber(stats.netWorth.ETH, 6)} (≈{formatNumber(stats.netWorth.ETH * stats.prices.ETH)})
+                      {formatNumber(stats.netWorth.total?.ETH ?? stats.netWorth.ETH, 6)}
+                      {stats.netWorth.locked?.ETH ? (
+                        <span className="text-orange-500 text-xs ml-1">
+                          (锁定 {formatNumber(stats.netWorth.locked.ETH, 6)})
+                        </span>
+                      ) : null}
+                      <span className="text-gray-400 ml-1">
+                        (≈{formatNumber((stats.netWorth.total?.ETH ?? stats.netWorth.ETH) * stats.prices.ETH)})
+                      </span>
                     </span>
                   </div>
                 </div>
