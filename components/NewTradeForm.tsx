@@ -10,7 +10,7 @@ interface Props {
 export default function NewTradeForm({ onClose, onSuccess }: Props) {
   const [formData, setFormData] = useState({
     platform: 'binance',
-    coin: 'BTC',
+    coin: 'ETH',
     direction: 'buy_low',
     inputAmount: '',
     inputCurrency: 'USDT',
@@ -19,7 +19,7 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
     apr: '',
     premium: '',
     exerciseAmount: '',
-    exerciseCurrency: 'BTC',
+    exerciseCurrency: 'ETH',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,6 +201,25 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
             <div className="border-t pt-4">
               <h3 className="font-semibold mb-3">预期结果</h3>
 
+              <div className="mb-3 p-3 bg-blue-50 rounded text-xs text-blue-800">
+                <p className="font-semibold mb-1">说明：</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>未行权收益</strong>：只填收益部分，不含本金</li>
+                  <li><strong>行权得到</strong>：填转换后的币数量
+                    {formData.direction === 'buy_low' && formData.inputAmount && formData.strikePrice && (
+                      <span className="text-green-700">
+                        （≈ {(parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)} {formData.exerciseCurrency}）
+                      </span>
+                    )}
+                    {formData.direction === 'sell_high' && formData.inputAmount && formData.strikePrice && (
+                      <span className="text-green-700">
+                        （≈ {(parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)} {formData.exerciseCurrency}）
+                      </span>
+                    )}
+                  </li>
+                </ul>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
@@ -213,8 +232,14 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                     onChange={handleChange}
                     step="0.000001"
                     className="w-full border rounded-lg px-3 py-2"
+                    placeholder="只填收益，不含本金"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    到期后得到：{formData.inputAmount && formData.premium
+                      ? `${(parseFloat(formData.inputAmount) + parseFloat(formData.premium)).toFixed(6)} ${formData.inputCurrency}`
+                      : '本金 + 收益'}
+                  </p>
                 </div>
 
                 <div>
@@ -228,8 +253,33 @@ export default function NewTradeForm({ onClose, onSuccess }: Props) {
                     onChange={handleChange}
                     step="0.000001"
                     className="w-full border rounded-lg px-3 py-2"
+                    placeholder="转换后的币数量"
                     required
                   />
+                  {formData.direction === 'buy_low' && formData.inputAmount && formData.strikePrice && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const calculated = (parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)
+                        setFormData(prev => ({ ...prev, exerciseAmount: calculated }))
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                    >
+                      自动计算：{(parseFloat(formData.inputAmount) / parseFloat(formData.strikePrice)).toFixed(8)}
+                    </button>
+                  )}
+                  {formData.direction === 'sell_high' && formData.inputAmount && formData.strikePrice && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const calculated = (parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)
+                        setFormData(prev => ({ ...prev, exerciseAmount: calculated }))
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                    >
+                      自动计算：{(parseFloat(formData.inputAmount) * parseFloat(formData.strikePrice)).toFixed(2)}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
