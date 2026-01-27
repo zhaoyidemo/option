@@ -193,50 +193,72 @@ export default function Home() {
                 <div className="text-3xl font-bold text-green-600 mb-4">
                   ≈ {formatNumber(stats.netWorth.totalUSDT)} USDT
                 </div>
-                <div className="space-y-1 text-sm">
+
+                {/* 总持仓 */}
+                <div className="space-y-2 text-sm">
                   {/* USDT */}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">USDT:</span>
-                    <span>
-                      {formatNumber(stats.netWorth.total?.USDT ?? stats.netWorth.USDT)}
-                      {stats.netWorth.locked?.USDT ? (
-                        <span className="text-orange-500 text-xs ml-1">
-                          (锁定 {formatNumber(stats.netWorth.locked.USDT)})
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
+                  {(stats.netWorth.total?.USDT ?? stats.netWorth.USDT) > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">USDT:</span>
+                      <span className="font-medium">
+                        {formatNumber(stats.netWorth.total?.USDT ?? stats.netWorth.USDT)}
+                      </span>
+                    </div>
+                  )}
+
                   {/* BTC */}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">BTC:</span>
-                    <span>
-                      {formatNumber(stats.netWorth.total?.BTC ?? stats.netWorth.BTC, 6)}
-                      {stats.netWorth.locked?.BTC ? (
-                        <span className="text-orange-500 text-xs ml-1">
-                          (锁定 {formatNumber(stats.netWorth.locked.BTC, 6)})
+                  {(stats.netWorth.total?.BTC ?? stats.netWorth.BTC) > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">BTC:</span>
+                      <span className="font-medium">
+                        {formatNumber(stats.netWorth.total?.BTC ?? stats.netWorth.BTC, 6)}
+                        <span className="text-gray-400 ml-1">
+                          (≈${formatNumber((stats.netWorth.total?.BTC ?? stats.netWorth.BTC) * stats.prices.BTC)})
                         </span>
-                      ) : null}
-                      <span className="text-gray-400 ml-1">
-                        (≈{formatNumber((stats.netWorth.total?.BTC ?? stats.netWorth.BTC) * stats.prices.BTC)})
                       </span>
-                    </span>
-                  </div>
+                    </div>
+                  )}
+
                   {/* ETH */}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">ETH:</span>
-                    <span>
-                      {formatNumber(stats.netWorth.total?.ETH ?? stats.netWorth.ETH, 6)}
-                      {stats.netWorth.locked?.ETH ? (
-                        <span className="text-orange-500 text-xs ml-1">
-                          (锁定 {formatNumber(stats.netWorth.locked.ETH, 6)})
+                  {(stats.netWorth.total?.ETH ?? stats.netWorth.ETH) > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">ETH:</span>
+                      <span className="font-medium">
+                        {formatNumber(stats.netWorth.total?.ETH ?? stats.netWorth.ETH, 6)}
+                        <span className="text-gray-400 ml-1">
+                          (≈${formatNumber((stats.netWorth.total?.ETH ?? stats.netWorth.ETH) * stats.prices.ETH)})
                         </span>
-                      ) : null}
-                      <span className="text-gray-400 ml-1">
-                        (≈{formatNumber((stats.netWorth.total?.ETH ?? stats.netWorth.ETH) * stats.prices.ETH)})
                       </span>
-                    </span>
-                  </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* 锁定资产（投入双币理财） */}
+                {stats.netWorth.locked && (stats.netWorth.locked.USDT > 0 || stats.netWorth.locked.BTC > 0 || stats.netWorth.locked.ETH > 0) && (
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <div className="text-xs text-orange-600 font-medium mb-2">投入双币理财（锁定中）</div>
+                    <div className="space-y-1 text-sm">
+                      {stats.netWorth.locked.USDT > 0 && (
+                        <div className="flex justify-between text-orange-600">
+                          <span>USDT:</span>
+                          <span>{formatNumber(stats.netWorth.locked.USDT)}</span>
+                        </div>
+                      )}
+                      {stats.netWorth.locked.BTC > 0 && (
+                        <div className="flex justify-between text-orange-600">
+                          <span>BTC:</span>
+                          <span>{formatNumber(stats.netWorth.locked.BTC, 6)}</span>
+                        </div>
+                      )}
+                      {stats.netWorth.locked.ETH > 0 && (
+                        <div className="flex justify-between text-orange-600">
+                          <span>ETH:</span>
+                          <span>{formatNumber(stats.netWorth.locked.ETH, 6)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-gray-400">加载中...</div>
