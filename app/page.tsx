@@ -17,6 +17,7 @@ interface Stats {
   totalProfit: number
   totalProfitRate: number
   profitByPlatform: Record<string, number>
+  priceError?: boolean
 }
 
 export default function Home() {
@@ -98,6 +99,32 @@ export default function Home() {
                 </ol>
                 <p className="mt-2 text-sm text-yellow-700">
                   详细步骤请查看：<a href="https://github.com/zhaoyidemo/option/blob/main/DEPLOYMENT.md" target="_blank" className="underline">DEPLOYMENT.md</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 价格获取失败警告 */}
+        {stats?.priceError && !dbError && (
+          <div className="mb-6 bg-orange-50 border-l-4 border-orange-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-orange-700">
+                  <strong>无法获取实时价格</strong> - CMC API 调用失败。请检查：
+                </p>
+                <ul className="mt-2 text-sm text-orange-700 list-disc list-inside">
+                  <li>CMC_API_KEY 环境变量是否正确配置</li>
+                  <li>API 调用次数是否超过限额（免费版每月 10,000 次）</li>
+                  <li>网络连接是否正常</li>
+                </ul>
+                <p className="mt-2 text-sm text-orange-700">
+                  当前显示的资产数量是正确的，但总净值为 0（因为价格为 0）
                 </p>
               </div>
             </div>

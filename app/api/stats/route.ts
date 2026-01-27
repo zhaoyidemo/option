@@ -4,10 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentPrices } from '@/lib/cmc'
 
 // 计算当前资产净值
-async function calculateNetWorth() {
+async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   const assets = await prisma.asset.findMany()
   const trades = await prisma.trade.findMany()
-  const prices = await getCurrentPrices()
 
   // 从初始资产开始
   const holdings: Record<string, number> = {}
@@ -44,10 +43,9 @@ async function calculateNetWorth() {
 }
 
 // 计算收益统计
-async function calculateProfitStats() {
+async function calculateProfitStats(prices: { BTC: number; ETH: number }, netWorth: any) {
   const assets = await prisma.asset.findMany()
   const trades = await prisma.trade.findMany()
-  const prices = await getCurrentPrices()
 
   // 初始资产总值（折算成 USDT）
   let initialTotalUSDT = 0
@@ -60,9 +58,6 @@ async function calculateProfitStats() {
       initialTotalUSDT += asset.initialAmount * prices.ETH
     }
   })
-
-  // 当前净值
-  const { netWorth } = await calculateNetWorth()
 
   // 总收益
   const totalProfit = netWorth.totalUSDT - initialTotalUSDT
@@ -108,22 +103,27 @@ async function calculateProfitStats() {
 export async function GET() {
   try {
     // 先尝试获取价格
-    let prices
+    let prices = { BTC: 0, ETH: 0 }
+    let priceError = false
+
     try {
       prices = await getCurrentPrices()
-    } catch (priceError) {
-      console.error('Failed to fetch prices from CMC:', priceError)
-      // 使用默认价格
-      prices = { BTC: 0, ETH: 0 }
+      console.log('CMC prices fetched successfully:', prices)
+    } catch (error) {
+      console.error('Failed to fetch prices from CMC:', error)
+      priceError = true
+      // 如果价格获取失败，尝试使用默认价格以便至少显示资产数量
+      // 实际应用中可以从缓存或其他来源获取价格
     }
 
-    // 然后计算统计数据
-    const netWorthData = await calculateNetWorth()
-    const profitStats = await calculateProfitStats()
+    // 计算统计数据
+    const netWorthData = await calculateNetWorth(prices)
+    const profitStats = await calculateProfitStats(prices, netWorthData.netWorth)
 
     return NextResponse.json({
       ...netWorthData,
       ...profitStats,
+      priceError, // 告知前端价格获取是否失败
     })
   } catch (error) {
     console.error('Error calculating stats:', error)
@@ -137,6 +137,7 @@ export async function GET() {
       totalProfit: 0,
       totalProfitRate: 0,
       profitByPlatform: {},
+      priceError: true,
     })
   }
 }
