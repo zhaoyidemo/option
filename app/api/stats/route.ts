@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentPrices } from '@/lib/cmc'
 
+// 禁用缓存，确保每次请求都获取最新价格
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // 计算当前资产净值
 async function calculateNetWorth(prices: { BTC: number; ETH: number }) {
   const assets = await prisma.asset.findMany()

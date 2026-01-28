@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// 禁用缓存
+export const dynamic = 'force-dynamic'
+
 // GET - 获取所有交易
 export async function GET() {
   try {
