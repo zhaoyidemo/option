@@ -66,6 +66,30 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
     }
   }
 
+  const settleTrade = async (id: string, exercised: boolean) => {
+    const action = exercised ? '行权' : '未行权'
+    if (!confirm(`确定将这笔交易标记为「${action}」吗？`)) return
+
+    try {
+      const res = await fetch('/api/settle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tradeId: id, exercised }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || '结算失败')
+      }
+
+      loadTrades()
+      onRefresh()
+    } catch (err: any) {
+      console.error('Failed to settle trade:', err)
+      alert(err.message || '结算失败')
+    }
+  }
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
@@ -290,6 +314,25 @@ export default function TradeList({ onRefresh }: { onRefresh: () => void }) {
                     <span className={`tag ${trade.status === 'pending' ? 'tag-pending' : 'tag-settled'}`}>
                       {trade.status === 'pending' ? '⏳ 进行中' : '✓ 已结算'}
                     </span>
+
+                    {/* 手动结算按钮 - 仅 pending 状态显示 */}
+                    {trade.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => settleTrade(trade.id, true)}
+                          className="px-3 py-1 text-xs font-medium rounded bg-[var(--danger)]/20 text-[var(--danger)] hover:bg-[var(--danger)]/30 transition-colors"
+                        >
+                          行权
+                        </button>
+                        <button
+                          onClick={() => settleTrade(trade.id, false)}
+                          className="px-3 py-1 text-xs font-medium rounded bg-[var(--success)]/20 text-[var(--success)] hover:bg-[var(--success)]/30 transition-colors"
+                        >
+                          未行权
+                        </button>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => deleteTrade(trade.id)}
                       className="text-xs text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"

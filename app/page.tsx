@@ -274,7 +274,19 @@ export default function Home() {
           <div className="card p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="data-label">实时价格</div>
-              <div className="live-indicator">实时</div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRefreshKey((k) => k + 1)}
+                  disabled={isLoading}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-cyan)] hover:bg-[var(--bg-secondary)] transition-all disabled:opacity-50"
+                  title="刷新价格"
+                >
+                  <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                <div className="live-indicator">实时</div>
+              </div>
             </div>
 
             {isLoading ? (
